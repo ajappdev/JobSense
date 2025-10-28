@@ -1,6 +1,9 @@
 # SCRAPING IMPORTATIONS
 from urllib.parse import urljoin, urlparse
 
+# DECLARING GLOBAL VARIABLES
+CRAWLIC_API_KEY = "9231f5d2341e59cf1a8ff4dc505b972190a7d41554ca77c063876666478d0fe5"
+
 def get_domain_from_link(link: str):
     parsed = urlparse(link)
     domain = parsed.netloc

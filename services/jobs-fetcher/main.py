@@ -1,5 +1,6 @@
 # General Imports
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import requests
 
 # App imports
@@ -7,8 +8,9 @@ import common as common
 import ai as ai
 
 app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173", "http://localhost:8080"])
 
-@app.route('/get-jobs', methods=['GET'])
+@app.route('/get-jobs', methods=['POST'])
 def get_jobs():
     try:
         # Validate JSON body
@@ -22,12 +24,20 @@ def get_jobs():
         link = data["link"]
         domain = common.get_domain_from_link(link)
 
-        url = "http://localhost:9500/describe-page"
+
+        url = "https://crawlic.ialae.com/describe-page"
         payload = {
             "link": link
         }
 
-        response = requests.get(url, json=payload)
+        headers = {
+            "Authorization": f"Bearer {common.CRAWLIC_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        # Call web scraping service at POST /describe-page
+        response = requests.post(url, json=payload, headers=headers)
+
         data = response.json()
 
         if data["success"]:

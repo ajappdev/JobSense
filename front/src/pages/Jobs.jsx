@@ -2,23 +2,50 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink, EyeOffIcon } from 'lucide-react';
 
-const mockJobs = [
-  { id: 1, title: 'Senior React Developer', match: 85, skills: ['React', 'TypeScript', 'Next.js'], company: 'TechCorp', url: '#' },
-  { id: 2, title: 'Fullstack Engineer', match: 72, skills: ['Node.js', 'MongoDB', 'Express'], company: 'StartupX', url: '#' },
-  { id: 3, title: 'Frontend Dev', match: 95, skills: ['Vue.js', 'Nuxt.js'], company: 'DesignCo', url: '#' },
-];
-
-
 export default function Jobs() {
-  const [jobs, setJobs] = useState(mockJobs);
+
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Example job board link (replace with real from Settings later)
+  const JOB_BOARD_LINK = 'https://example.com/jobs';
 
   useEffect(() => {
-    // API placeholder - fetch jobs
-    fetch('/api/jobs')
-      .then(res => res.json())
-      .then(setJobs);
+    const fetchJobs = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await fetch('http://localhost:5001/get-jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ link: JOB_BOARD_LINK })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setJobs(data.jobs.map((job, i) => ({
+            id: job.job_link || i,
+            title: job.title || 'Untitled Job',
+            match: job.match_score || Math.floor(Math.random() * 40) + 60, // fallback
+            skills: job.skills || [],
+            company: job.company || 'Unknown',
+            url: job.job_link
+          })));
+        } else {
+          setError(data.error || 'Failed to fetch jobs');
+        }
+      } catch (err) {
+        setError('Network error. Is the server running?');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
 
@@ -26,6 +53,9 @@ export default function Jobs() {
     // API placeholder
     fetch(`/api/jobs/${id}/ignore`, { method: 'POST' });
   };
+
+  if (loading) return <div className="p-6 text-center">Loading jobs...</div>;
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
